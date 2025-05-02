@@ -8,6 +8,12 @@ int num_threads = DEFAULT_THREADS;
 int buffer_max_size = DEFAULT_BUFFER_SIZE;
 int scheduling_algo = DEFAULT_SCHED_ALGO;	
 
+struct web_requests { //web_requests is a type now
+  int fd; //file descriptor
+  char filename[MAXBUF];
+  int sbuf_size; //buffer size
+};
+
 // Starter code for producer consumer from slides - will edit
 cond_t empty, fill;
 mutex_t mutex;
@@ -16,9 +22,10 @@ mutex_t mutex;
 //
 //	TODO: add code to create and manage the buffer
 //
-int req_array[] = {MAXBUF};
+web_requests req_array[MAXBUF]; //array of type web_requests
 // make it easier to get the length of the request array
 int length_req_array = sizeof(req_array) / sizeof(req_array[0]);
+int num_items = 0;
 
 // tried something very similar to the code given in class, but I think I need to do something closer to the variable size
 void producer(void arg) {
@@ -171,12 +178,12 @@ void* thread_request_serve_static(void* arg)
     //lock the buffer
     //pop the first request
     //unlock the buffer
-
-    // continue handling
+    web_requests handle_request = req_array[0];
+    request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size); // continue handling
 
   //}
     
-
+// if change how parent adds to array, line 181 cannot use req_array[0]
 }
 
 //
@@ -220,12 +227,15 @@ void request_handle(int fd) {
       die("Outside of directory!!");
     }
 		
+    web_requests new_request = {fd, filename, sbuf.st_size};
+
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
     switch (scheduling_algo) {
       case 0: // FIFO
         Pthread_mutex_lock(&mutex);
         // waiting condition
-        req_array.append(request); // add request to end of the list
+        req_array[num_items] = new_request; // add request to end of the list
+        num_items++;
         // wake/signal condition thing
         Pthread_mutex_unlock(&mutex)
       
@@ -242,7 +252,7 @@ void request_handle(int fd) {
             }
           }
           else {
-              req_array.append(request); // if no match, append to end of array
+              req_array[num_items] = request; // if no match, append to end of array
           }
         }
         else {
@@ -259,6 +269,7 @@ void request_handle(int fd) {
       // wake/signal condition thing
       Pthread_mutex_unlock(&mutex)
       }
+      // generate between 0 and num of items
 
     } else {
 		request_error(fd, filename, "501", "Not Implemented", "server does not serve dynamic content request");
