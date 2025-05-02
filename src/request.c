@@ -16,15 +16,18 @@ mutex_t mutex;
 //
 //	TODO: add code to create and manage the buffer
 //
-req_array = [];
-while len(req_array) == 0 {
+int req_array[] = {MAXBUF};
+// make it easier to get the length of the request array
+int length_req_array = sizeof(req_array) / sizeof(req_array[0]);
+
+//while length_req_array == 0 {
   // Producer wakes up
   // Call request_handle to get requests in the buffer
-}
-while len(req_array) == MAX {
+//}
+//while length_req_array == MAXBUF {
   // Consumer wake up
   // Call thread_request_serve_static
-}
+//}
 
 //
 // Sends out HTTP response in case of errors
@@ -154,14 +157,14 @@ void* thread_request_serve_static(void* arg)
 {
 	// TODO: write code to actualy respond to HTTP requests
   // Hint: probably do a while(1) or while(true)
-  while (true){
+  //while (true){
     //lock the buffer
     //pop the first request
     //unlock the buffer
 
     // continue handling
 
-  }
+  //}
     
 
 }
@@ -204,24 +207,46 @@ void request_handle(int fd) {
 		}
   // if not in current directory: abort
     if (1!=1) { //Change content in parentheses
-      exit();
+      die("Outside of directory!!");
     }
 		
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
-    // Switch:
-    // Case 1: FIFO
-        // req_array.append(request) - add request to end of the list
-    // Case 2: SFF (Smallest file first)
-        // Get req_array
+    switch (scheduling_algo) {
+      case 0: // FIFO
+        //lock array
+        req_array.append(request); // add request to end of the list
+        //unlock array
+      
+        case 1: // SFF (Smallest file first)
+        // lock array
+
         // Loop through req_array using i (if len > 0) to find where to insert request
-            // for each request in req_array
-                // get size
-                // compare size
-                    //if req_array[i] size > current size:
-                    // insert request at i
-            // if no match, append to end of array
-    // Case 3: Random
-        // add request randomly in the list
+        if length_req_array > 0 {
+          for (int pending = 0; pending < length_req_array; pending++) { // for each request in req_array
+            int pending_size = 0; //Change to size = getting filesize of pending
+            if size > pending_size { //if req_array[i] size > current size:
+              req_array.append[pending];
+            }
+          }
+          else {
+              req_array.append(request); // if no match, append to end of array
+          }
+        }
+        else {
+          req_array.append();
+        }
+        
+          
+
+          // unlock array
+    case 2: // Random
+      // lock array  
+    
+      // add request randomly in the list
+        req_array.add[rand.randint];
+
+      //unlock array
+      }
 
     } else {
 		request_error(fd, filename, "501", "Not Implemented", "server does not serve dynamic content request");
