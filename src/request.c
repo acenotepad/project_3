@@ -3,10 +3,28 @@
 
 #define MAXBUF (8192)
 
+// below default values are defined in 'request.h'
+int num_threads = DEFAULT_THREADS;
+int buffer_max_size = DEFAULT_BUFFER_SIZE;
+int scheduling_algo = DEFAULT_SCHED_ALGO;	
+
+// Starter code for producer consumer from slides - will edit
+cond_t empty, full;
+mutex_t mutex;
+
 
 //
 //	TODO: add code to create and manage the buffer
 //
+req_array = [];
+while len(req_array) == 0 {
+  // Producer wakes up
+  // Call request_handle to get requests in the buffer
+}
+while len(req_array) == MAX {
+  // Consumer wake up
+  // Call thread_request_serve_static
+}
 
 //
 // Sends out HTTP response in case of errors
@@ -135,6 +153,17 @@ void request_serve_static(int fd, char *filename, int filesize) {
 void* thread_request_serve_static(void* arg)
 {
 	// TODO: write code to actualy respond to HTTP requests
+  // Hint: probably do a while(1) or while(true)
+  while (true){
+    //lock the buffer
+    //pop the first request
+    //unlock the buffer
+
+    // continue handling
+
+  }
+    
+
 }
 
 //
@@ -173,8 +202,26 @@ void request_handle(int fd) {
 			request_error(fd, filename, "403", "Forbidden", "server could not read this file");
 			return;
 		}
+  // if not in current directory: abort
+    if (1!=1) { //Change content in parentheses
+      exit();
+    }
 		
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
+    // Switch:
+    // Case 1: FIFO
+        // req_array.append(request) - add request to end of the list
+    // Case 2: SFF (Smallest file first)
+        // Get req_array
+        // Loop through req_array using i (if len > 0) to find where to insert request
+            // for each request in req_array
+                // get size
+                // compare size
+                    //if req_array[i] size > current size:
+                    // insert request at i
+            // if no match, append to end of array
+    // Case 3: Random
+        // add request randomly in the list
 
     } else {
 		request_error(fd, filename, "501", "Not Implemented", "server does not serve dynamic content request");
