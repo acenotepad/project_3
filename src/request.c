@@ -9,7 +9,7 @@ int buffer_max_size = DEFAULT_BUFFER_SIZE;
 int scheduling_algo = DEFAULT_SCHED_ALGO;	
 
 // Starter code for producer consumer from slides - will edit
-cond_t empty, full;
+cond_t empty, fill;
 mutex_t mutex;
 
 
@@ -20,14 +20,24 @@ int req_array[] = {MAXBUF};
 // make it easier to get the length of the request array
 int length_req_array = sizeof(req_array) / sizeof(req_array[0]);
 
-//while length_req_array == 0 {
-  // Producer wakes up
+// tried something very similar to the code given in class, but I think I need to do something closer to the variable size
+void producer(void arg) {
+  Pthread_mutex_lock(&mutex);
+  while (length_req_array == 0)
+  Pthread_cond_wait(&empty, &mutex);
   // Call request_handle to get requests in the buffer
-//}
-//while length_req_array == MAXBUF {
-  // Consumer wake up
+  Pthread_cond_signal(&fill);
+  Pthread_mutex_unlock(&mutex);
+}
+
+void consumer(void arg){
+  Pthread_mutex_lock(&mutex);
+  while length_req_array == MAXBUF
+  Pthread_cond_wait(&fill, &mutex);
   // Call thread_request_serve_static
-//}
+  Pthread_cond_signal(&empty);
+  Pthread_mutex_unlock(&mutex);
+}
 
 //
 // Sends out HTTP response in case of errors
@@ -213,12 +223,15 @@ void request_handle(int fd) {
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
     switch (scheduling_algo) {
       case 0: // FIFO
-        //lock array
+        Pthread_mutex_lock(&mutex);
+        // waiting condition
         req_array.append(request); // add request to end of the list
-        //unlock array
+        // wake/signal condition thing
+        Pthread_mutex_unlock(&mutex)
       
         case 1: // SFF (Smallest file first)
-        // lock array
+        Pthread_mutex_lock(&mutex);
+        // waiting condition
 
         // Loop through req_array using i (if len > 0) to find where to insert request
         if length_req_array > 0 {
@@ -235,17 +248,16 @@ void request_handle(int fd) {
         else {
           req_array.append();
         }
-        
-          
 
-          // unlock array
+        // wake/signal condition thing
+        Pthread_mutex_unlock(&mutex)
     case 2: // Random
-      // lock array  
-    
+      Pthread_mutex_lock(&mutex);
+      // waiting condition
       // add request randomly in the list
         req_array.add[rand.randint];
-
-      //unlock array
+      // wake/signal condition thing
+      Pthread_mutex_unlock(&mutex)
       }
 
     } else {
