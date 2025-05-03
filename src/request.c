@@ -175,16 +175,18 @@ void* thread_request_serve_static(void* arg)
 	// TODO: write code to actualy respond to HTTP requests
   // Hint: probably do a while(1) or while(true)
   //while (true){
-    //lock the buffer
+    Pthread_mutex_lock(&mutex);
     //pop the first request
-    //unlock the buffer
-    web_requests handle_request = req_array[0];
-    request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size); // continue handling
+    web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
+    request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size);
+    for (int i = 1; i < num_items; i++;){
+      // do the swapping
+    }
+    num_items--; // continue handling
 
+    Pthread_mutex_unlock(&mutex);
   //}
-    
-// if change how parent adds to array, line 181 cannot use req_array[0]
-}
+  }
 
 //
 // Initial handling of the request
@@ -237,18 +239,20 @@ void request_handle(int fd) {
         req_array[num_items] = new_request; // add request to end of the list
         num_items++;
         // wake/signal condition thing
-        Pthread_mutex_unlock(&mutex)
+        Pthread_mutex_unlock(&mutex);
       
-        case 1: // SFF (Smallest file first)
+      case 1: // SFF (Smallest file first)
         Pthread_mutex_lock(&mutex);
         // waiting condition
 
         // Loop through req_array using i (if len > 0) to find where to insert request
-        if length_req_array > 0 {
-          for (int pending = 0; pending < length_req_array; pending++) { // for each request in req_array
-            int pending_size = 0; //Change to size = getting filesize of pending
-            if size > pending_size { //if req_array[i] size > current size:
-              req_array.append[pending];
+        if (num_items > 0) {
+          for (int i = 0; i < num_items; i++) { // for each request in req_array
+            int new_request.sbuf_size = 0; //Change to size = getting filesize of pending
+            if (i.sbuf_size > new_request.sbuf_size) { //if req_array[i] size > current size:
+              for (int j = num_items; j >){
+                // do the swapping
+              }
             }
           }
           else {
@@ -261,15 +265,15 @@ void request_handle(int fd) {
 
         // wake/signal condition thing
         Pthread_mutex_unlock(&mutex)
-    case 2: // Random
-      Pthread_mutex_lock(&mutex);
-      // waiting condition
-      // add request randomly in the list
+      case 2: // Random
+        Pthread_mutex_lock(&mutex);
+        // waiting condition
+        // add request randomly in the list
         req_array.add[rand.randint];
-      // wake/signal condition thing
-      Pthread_mutex_unlock(&mutex)
-      }
-      // generate between 0 and num of items
+        // wake/signal condition thing
+        Pthread_mutex_unlock(&mutex)
+        }
+        // generate between 0 and num of items
 
     } else {
 		request_error(fd, filename, "501", "Not Implemented", "server does not serve dynamic content request");
