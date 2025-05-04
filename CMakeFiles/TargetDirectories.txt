@@ -1,0 +1,4 @@
+/mnt/c/Users/acous/Documents/College/Spring 2025/CYB 3053 Operating Systems/OSProj3-main/CMakeFiles/server.dir
+/mnt/c/Users/acous/Documents/College/Spring 2025/CYB 3053 Operating Systems/OSProj3-main/CMakeFiles/client.dir
+/mnt/c/Users/acous/Documents/College/Spring 2025/CYB 3053 Operating Systems/OSProj3-main/CMakeFiles/edit_cache.dir
+/mnt/c/Users/acous/Documents/College/Spring 2025/CYB 3053 Operating Systems/OSProj3-main/CMakeFiles/rebuild_cache.dir
