@@ -183,7 +183,7 @@ void* thread_request_serve_static(void* arg)
 
     struct web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
     request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size);
-    for (int i = 0; i < num_items; i++){
+    for (int i = 0; i < num_items-1; i++){ // Fixed off by one error
       // do the swapping
       req_array[i] = req_array[i+1];
     }
