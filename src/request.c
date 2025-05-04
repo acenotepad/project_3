@@ -15,9 +15,8 @@ struct web_requests { //web_requests is a type now
 };
 
 // Starter code for producer consumer from slides - will edit
-cond_t empty, fill;
+cond_t buffer_has_items;
 mutex_t mutex;
-
 
 //
 //	TODO: add code to create and manage the buffer
@@ -28,9 +27,10 @@ int length_req_array = sizeof(req_array) / sizeof(req_array[0]);
 int num_items = 0;
 
 // tried something very similar to the code given in class, but I think I need to do something closer to the variable size
+// these might not even been needed; use num_items to wake up child threads if something is in the array, not just a full/empty condition
 void producer(void arg) {
   Pthread_mutex_lock(&mutex);
-  while (length_req_array == 0)
+  while (num_items == 0)
   Pthread_cond_wait(&empty, &mutex);
   // Call request_handle to get requests in the buffer
   Pthread_cond_signal(&fill);
@@ -39,7 +39,7 @@ void producer(void arg) {
 
 void consumer(void arg){
   Pthread_mutex_lock(&mutex);
-  while length_req_array == MAXBUF
+  while (num_items != 0)
   Pthread_cond_wait(&fill, &mutex);
   // Call thread_request_serve_static
   Pthread_cond_signal(&empty);
@@ -174,19 +174,20 @@ void* thread_request_serve_static(void* arg)
 {
 	// TODO: write code to actualy respond to HTTP requests
   // Hint: probably do a while(1) or while(true)
-  //while (true){
+  while (true){
     Pthread_mutex_lock(&mutex);
-    //pop the first request
+
     web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
     request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size);
-    for (int i = 1; i < num_items; i++;){
+    for (int i = 0; i < num_items; i++;){
       // do the swapping
+      req_array[i] = req_array[i+1];
     }
-    num_items--; // continue handling
+    num_items--; // subtract from num_items
 
     Pthread_mutex_unlock(&mutex);
-  //}
   }
+}
 
 //
 // Initial handling of the request
@@ -239,6 +240,7 @@ void request_handle(int fd) {
         req_array[num_items] = new_request; // add request to end of the list
         num_items++;
         // wake/signal condition thing
+        Pthread_cond_signal(&buffer_has_items);
         Pthread_mutex_unlock(&mutex);
       
       case 1: // SFF (Smallest file first)
@@ -250,8 +252,14 @@ void request_handle(int fd) {
           for (int i = 0; i < num_items; i++) { // for each request in req_array
             int new_request.sbuf_size = 0; //Change to size = getting filesize of pending
             if (i.sbuf_size > new_request.sbuf_size) { //if req_array[i] size > current size:
-              for (int j = num_items; j >){
+              for (int j = num_items; j > i-1; j--;){
                 // do the swapping
+                if (j == i){ // if j = i, this is where the new value is inserted
+                  req_array[j] = req_array[i];
+                }
+                else { // otherwise, continue shifting everything up
+                req_array[j+1] = req_array[j];
+                }
               }
             }
           }
@@ -263,15 +271,15 @@ void request_handle(int fd) {
           req_array.append();
         }
 
-        // wake/signal condition thing
-        Pthread_mutex_unlock(&mutex)
+        Pthread_cond_signal(&buffer_has_items) // wake/signal condition thing
+        Pthread_mutex_unlock(&mutex);
       case 2: // Random
         Pthread_mutex_lock(&mutex);
         // waiting condition
         // add request randomly in the list
         req_array.add[rand.randint];
-        // wake/signal condition thing
-        Pthread_mutex_unlock(&mutex)
+        Pthread_cond_signal(&buffer_has_items) // wake/signal condition thing
+        Pthread_mutex_unlock(&mutex);
         }
         // generate between 0 and num of items
 
