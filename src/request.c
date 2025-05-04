@@ -8,43 +8,46 @@ int num_threads = DEFAULT_THREADS;
 int buffer_max_size = DEFAULT_BUFFER_SIZE;
 int scheduling_algo = DEFAULT_SCHED_ALGO;	
 
+// Starter code for producer consumer from slides - will edit
+pthread_cond_t buffer_has_items = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+//cond_t buffer_has_items;
+//mutex_t mutex;
+
+//
+//	TODO: add code to create and manage the buffer
+//
+
 struct web_requests { //web_requests is a type now
   int fd; //file descriptor
   char filename[MAXBUF];
   int sbuf_size; //buffer size
 };
 
-// Starter code for producer consumer from slides - will edit
-cond_t buffer_has_items;
-mutex_t mutex;
-
-//
-//	TODO: add code to create and manage the buffer
-//
-web_requests req_array[MAXBUF]; //array of type web_requests
+struct web_requests req_array[MAXBUF]; //array of type web_requests
 // make it easier to get the length of the request array
 int length_req_array = sizeof(req_array) / sizeof(req_array[0]);
 int num_items = 0;
 
 // tried something very similar to the code given in class, but I think I need to do something closer to the variable size
 // these might not even been needed; use num_items to wake up child threads if something is in the array, not just a full/empty condition
-void producer(void arg) {
-  Pthread_mutex_lock(&mutex);
-  while (num_items == 0)
-  Pthread_cond_wait(&empty, &mutex);
-  // Call request_handle to get requests in the buffer
-  Pthread_cond_signal(&fill);
-  Pthread_mutex_unlock(&mutex);
-}
+// void producer(void arg) {
+//   pthread_mutex_lock(&mutex);
+//   while (num_items == 0)
+//   pthread_cond_wait(&empty, &mutex);
+//   // Call request_handle to get requests in the buffer
+//   pthread_cond_signal(&fill);
+//   pthread_mutex_unlock(&mutex);
+// }
 
-void consumer(void arg){
-  Pthread_mutex_lock(&mutex);
-  while (num_items != 0)
-  Pthread_cond_wait(&fill, &mutex);
-  // Call thread_request_serve_static
-  Pthread_cond_signal(&empty);
-  Pthread_mutex_unlock(&mutex);
-}
+// void consumer(void arg){
+//   pthread_mutex_lock(&mutex);
+//   while (num_items != 0)
+//   pthread_cond_wait(&fill, &mutex);
+//   // Call thread_request_serve_static
+//   pthread_cond_signal(&empty);
+//   pthread_mutex_unlock(&mutex);
+// }
 
 //
 // Sends out HTTP response in case of errors
@@ -174,18 +177,18 @@ void* thread_request_serve_static(void* arg)
 {
 	// TODO: write code to actualy respond to HTTP requests
   // Hint: probably do a while(1) or while(true)
-  while (true){
-    Pthread_mutex_lock(&mutex);
+  while (1){
+    pthread_mutex_lock(&mutex);
 
-    web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
+    struct web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
     request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size);
-    for (int i = 0; i < num_items; i++;){
+    for (int i = 0; i < num_items; i++){
       // do the swapping
       req_array[i] = req_array[i+1];
     }
     num_items--; // subtract from num_items
 
-    Pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex);
   }
 }
 
@@ -226,33 +229,33 @@ void request_handle(int fd) {
 			return;
 		}
   // if not in current directory: abort
-    if (1!=1) { //Change content in parentheses
-      die("Outside of directory!!");
-    }
+    // if (1!=1) { //Change content in parentheses
+    //   exit(1);
+    // }
 		
-    web_requests new_request = {fd, filename, sbuf.st_size};
+    struct web_requests new_request = {fd, filename, sbuf.st_size};
 
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
     switch (scheduling_algo) {
       case 0: // FIFO
-        Pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
         // waiting condition
         req_array[num_items] = new_request; // add request to end of the list
         num_items++;
         // wake/signal condition thing
-        Pthread_cond_signal(&buffer_has_items);
-        Pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&buffer_has_items);
+        pthread_mutex_unlock(&mutex);
       
       case 1: // SFF (Smallest file first)
-        Pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
         // waiting condition
 
         // Loop through req_array using i (if len > 0) to find where to insert request
         if (num_items > 0) {
           for (int i = 0; i < num_items; i++) { // for each request in req_array
-            int new_request.sbuf_size = 0; //Change to size = getting filesize of pending
-            if (i.sbuf_size > new_request.sbuf_size) { //if req_array[i] size > current size:
-              for (int j = num_items; j > i-1; j--;){
+            //int i.sbuf_size; //Change to size = getting filesize of pending
+            if (req_array[i].sbuf_size > new_request.sbuf_size) { //if req_array[i] size > current size:
+              for (int j = num_items; j > i-1; j--){
                 // do the swapping
                 if (j == i){ // if j = i, this is where the new value is inserted
                   req_array[j] = req_array[i];
@@ -263,23 +266,27 @@ void request_handle(int fd) {
               }
             }
           }
-          else {
-              req_array[num_items] = request; // if no match, append to end of array
-          }
-        }
-        else {
-          req_array.append();
+        } else {
+            req_array[num_items] = new_request; // if no match, append to end of array
         }
 
-        Pthread_cond_signal(&buffer_has_items) // wake/signal condition thing
-        Pthread_mutex_unlock(&mutex);
+        pthread_cond_signal(&buffer_has_items); // wake/signal condition thing
+        pthread_mutex_unlock(&mutex);
       case 2: // Random
-        Pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex);
         // waiting condition
         // add request randomly in the list
-        req_array.add[rand.randint];
-        Pthread_cond_signal(&buffer_has_items) // wake/signal condition thing
-        Pthread_mutex_unlock(&mutex);
+        int insert_placeholder = rand() % num_items;
+        for (int i=num_items; i > insert_placeholder - 1; i--){
+          if (i>insert_placeholder){
+            req_array[i+1] = req_array[i];
+          }
+          else if (i = insert_placeholder){
+            req_array[i] = new_request;
+          }
+        }
+        pthread_cond_signal(&buffer_has_items); // wake/signal condition thing
+        pthread_mutex_unlock(&mutex);
         }
         // generate between 0 and num of items
 
