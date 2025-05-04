@@ -179,6 +179,7 @@ void* thread_request_serve_static(void* arg)
   // Hint: probably do a while(1) or while(true)
   while (1){
     pthread_mutex_lock(&mutex);
+    pthread_cond_wait(&buffer_has_items, &mutex);
 
     struct web_requests handle_request = req_array[0]; // if change how parent adds to array, line 181 cannot use req_array[0]
     request_serve_static(handle_request.fd, handle_request.filename, handle_request.sbuf_size);
