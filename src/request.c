@@ -22,6 +22,7 @@ struct web_requests { //web_requests is a type now
   int fd; //file descriptor
   char filename[MAXBUF];
   int sbuf_size; //buffer size
+  int counter; //counter variable added uninitialized
 };
 
 struct web_requests req_array[MAXBUF]; //array of type web_requests
@@ -234,7 +235,7 @@ void request_handle(int fd) {
     //   exit(1);
     // }
 		
-    struct web_requests new_request = {fd, filename, sbuf.st_size};
+    struct web_requests new_request = {fd, filename, sbuf.st_size, 0}; //added counter initialization
 
 		// TODO: write code to add HTTP requests in the buffer based on the scheduling policy
     switch (scheduling_algo) {
@@ -249,13 +250,13 @@ void request_handle(int fd) {
       
       case 1: // SFF (Smallest file first)
         pthread_mutex_lock(&mutex);
-        // waiting condition
+        // waiting condition?
 
         // Loop through req_array using i (if len > 0) to find where to insert request
         if (num_items > 0) {
           for (int i = 0; i < num_items; i++) { // for each request in req_array
             //int i.sbuf_size; //Change to size = getting filesize of pending
-            if (req_array[i].sbuf_size > new_request.sbuf_size) { //if req_array[i] size > current size:
+            if (req_array[i].sbuf_size > new_request.sbuf_size) { //if req_array[existing_request] size > current size:
               for (int j = num_items; j > i-1; j--){
                 // do the swapping
                 if (j == i){ // if j = i, this is where the new value is inserted
@@ -263,6 +264,7 @@ void request_handle(int fd) {
                 }
                 else { // otherwise, continue shifting everything up
                 req_array[j+1] = req_array[j];
+                //req_array[i].counter++; // increase the counter
                 }
               }
             }
@@ -277,7 +279,7 @@ void request_handle(int fd) {
         pthread_mutex_lock(&mutex);
         // waiting condition
         // add request randomly in the list
-        int insert_placeholder = rand() % num_items;
+        int insert_placeholder = rand() % num_items; // generate between 0 and num of items
         for (int i=num_items; i > insert_placeholder - 1; i--){
           if (i>insert_placeholder){
             req_array[i+1] = req_array[i];
@@ -289,7 +291,6 @@ void request_handle(int fd) {
         pthread_cond_signal(&buffer_has_items); // wake/signal condition thing
         pthread_mutex_unlock(&mutex);
         }
-        // generate between 0 and num of items
 
     } else {
 		request_error(fd, filename, "501", "Not Implemented", "server does not serve dynamic content request");
